@@ -252,3 +252,38 @@ public:
 		return vec;
 	}
 };
+
+__forceinline bool rayTriMeshIntersect(const Vec3_t& o, const Vec3_t& d, float mx, const Vec3_t* tri, int n, float& tm)
+{
+	tm = mx + 1.f;
+	bool hit = false;
+	for (int i = 0; i < n; ++i)
+	{
+		const Vec3_t& v0 = tri[i*3];
+		const Vec3_t& v1 = tri[i*3+1];
+		const Vec3_t& v2 = tri[i*3+2];
+
+		Vec3_t e1 = v1 - v0;
+		Vec3_t e2 = v2 - v0;
+		Vec3_t pv = d.cross(e2);
+		float det = e1.dot(pv);
+		if (det > -1e-8f && det < 1e-8f) continue;
+		float idet = 1.f / det;
+
+		Vec3_t tv = o - v0;
+		float u = tv.dot(pv) * idet;
+		if (u < 0.f || u > 1.f) continue;
+
+		Vec3_t qv = tv.cross(e1);
+		float v = d.dot(qv) * idet;
+		if (v < 0.f || u + v > 1.f) continue;
+
+		float _t = e2.dot(qv) * idet;
+		if (_t > 1e-8f && _t < tm)
+		{
+			tm = _t;
+			hit = true;
+		}
+	}
+	return hit;
+}
